@@ -17,7 +17,7 @@
 import warnings
 import humps
 
-from hsfs import training_dataset, feature_group, util
+from hsfs import training_dataset, feature_group, streaming_feature_group, util
 from hsfs.core import (
     feature_group_api,
     storage_connector_api,
@@ -155,4 +155,14 @@ class FeatureStore:
             splits=splits,
             seed=seed,
             statistics_config=statistics_config,
+        )
+
+    def create_streaming_feature_group(
+        self, name, version=None, description="",
+    ):
+        return streaming_feature_group.StreamingFeatureGroup(
+            name=name,
+            version=version,
+            description=description,
+            featurestore_id=self._id,
         )

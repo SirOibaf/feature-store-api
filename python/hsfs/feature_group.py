@@ -136,10 +136,7 @@ class FeatureGroup:
 
         user_version = self._version
         self._feature_group_engine.save(
-            self,
-            feature_dataframe,
-            self._default_storage,
-            write_options,
+            self, feature_dataframe, self._default_storage, write_options,
         )
         if self.statistics_config.enabled:
             self._statistics_engine.compute_statistics(self, feature_dataframe)

@@ -339,6 +339,48 @@ class Engine:
         # Monkey patch the class to use the one defined above.
         hdfs.path._HdfsPathSplitter = _HopsFSPathSplitter
 
+    def setup_stream(self, topic_name, stream_options):
+        config = self._get_kafka_config(stream_options)
+        return (
+            self._spark_session.readStream.format("kafka")
+            .options(**config)
+            .option("subscribe", topic_name)
+            .load()
+        )
+
+    def _get_kafka_config(stream_options):
+        cert_password = self._get_cert_pw();
+        config = {
+            "kafka.bootstrap.servers": os.environ["KAFKA_BROKERS"].replace("INTERNAL://",""),
+            "kafka.security.protocol": "SSL",
+            "kafka.ssl.keystore.location": "k_certificate",
+            "kafka.ssl.keystore.password": cert_password,
+            "kafka.ssl.truststore.location": "t_certificate",
+            "kafka.ssl.truststore.password": cert_password,
+            "kafka.ssl.key.password": cert_password,
+            "kafka.ssl.endpoint.identification.algorithm": "",
+        }
+
+        return {**config, **stream_options}
+
+    #TODO(Fabio); this needs to be cleaned up and not duplicated with hopsworks.py
+    def _get_cert_pw(self):
+        """
+        Get keystore password from local container
+
+        Returns:
+            Certificate password
+        """
+        pwd_path = Path("material_passwd")
+        if not pwd_path.exists():
+            username = os.environ["HADOOP_USER_NAME"]
+            material_directory = Path(os.environ["MATERIAL_DIRECTORY"])
+            pwd_path = material_directory.joinpath(username + "__cert.key")
+
+        with pwd_path.open() as f:
+            return f.read()
+
+
 
 class SchemaError(Exception):
     """Thrown when schemas don't match"""
