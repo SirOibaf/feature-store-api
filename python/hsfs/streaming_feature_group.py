@@ -36,6 +36,7 @@ class StreamingFeatureGroup:
         id=None,
         features=None,
     ):
+        self._id = id
         self._feature_store_id = featurestore_id
         self._feature_store_name = featurestore_name
         self._description = description
