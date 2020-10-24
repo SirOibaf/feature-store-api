@@ -26,7 +26,7 @@ class StreamingFeatureGroupEngine:
         self._streaming_feature_group_api = streaming_feature_group_api.StreamingFeatureGroupApi(
             feature_store_id
         )
-        self._feature_store_api = feature_store_api.FeatureStore()
+        self._feature_store_api = feature_store_api.FeatureStoreApi()
 
     def save(self, feature_group):
         if "HOF_APPLY" not in os.environ:
