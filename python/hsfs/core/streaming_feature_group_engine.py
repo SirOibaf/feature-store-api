@@ -14,19 +14,32 @@
 #   limitations under the License.
 #
 
+import os
+
 from hsfs import engine
-from hsfs.core import streaming_feature_group_api
+from hsfs.core import feature_store_api, streaming_feature_group_api
 
 
 class StreamingFeatureGroupEngine:
     def __init__(self, feature_store_id):
+        self._feature_store_id = feature_store_id
         self._streaming_feature_group_api = streaming_feature_group_api.StreamingFeatureGroupApi(
             feature_store_id
         )
+        self._feature_store_api = feature_store_api.FeatureStore()
 
     def save(self, feature_group):
-        # TODO(Fabio): check that the signature matches
-        self._streaming_feature_group_api.save(feature_group)
+        if "HOF_APPLY" not in os.environ:
+            snapshot_data = {
+                "kernelId": os.environ["HOPSWORKS_KERNEL_ID"],
+                "applicationId": os.environ["APPLICATION_ID"],
+            }
+            self._feature_store_api.save_code(self._feature_store_id, snapshot_data)
+            self._streaming_feature_group_api.save(feature_group)
 
     def apply(self, feature_group, stream_options):
-        engine.get_instance().setup_stream("topic_name", stream_options)
+        os.environ["HOF_APPLY"] = "HOF_APPLY"
+
+        engine.get_instance().setup_stream(
+            feature_group.kafka_topic_name, stream_options
+        )

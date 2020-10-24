@@ -18,6 +18,7 @@ import os
 
 import pandas as pd
 import numpy as np
+import Path
 
 # in case importing in %%local
 try:
@@ -348,10 +349,12 @@ class Engine:
             .load()
         )
 
-    def _get_kafka_config(stream_options):
-        cert_password = self._get_cert_pw();
+    def _get_kafka_config(self, stream_options):
+        cert_password = self._get_cert_pw()
         config = {
-            "kafka.bootstrap.servers": os.environ["KAFKA_BROKERS"].replace("INTERNAL://",""),
+            "kafka.bootstrap.servers": os.environ["KAFKA_BROKERS"].replace(
+                "INTERNAL://", ""
+            ),
             "kafka.security.protocol": "SSL",
             "kafka.ssl.keystore.location": "k_certificate",
             "kafka.ssl.keystore.password": cert_password,
@@ -363,7 +366,7 @@ class Engine:
 
         return {**config, **stream_options}
 
-    #TODO(Fabio); this needs to be cleaned up and not duplicated with hopsworks.py
+    # TODO(Fabio); this needs to be cleaned up and not duplicated with hopsworks.py
     def _get_cert_pw(self):
         """
         Get keystore password from local container
@@ -379,7 +382,6 @@ class Engine:
 
         with pwd_path.open() as f:
             return f.read()
-
 
 
 class SchemaError(Exception):

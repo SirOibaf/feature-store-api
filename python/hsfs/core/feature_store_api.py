@@ -14,6 +14,8 @@
 #   limitations under the License.
 #
 
+import json
+
 from hsfs import client
 from hsfs.feature_store import FeatureStore
 
@@ -34,4 +36,18 @@ class FeatureStoreApi:
         path_params = ["project", _client._project_id, "featurestores", identifier]
         return FeatureStore.from_response_json(
             _client._send_request("GET", path_params)
+        )
+
+    def save_code(self, identifier, data):
+        _client = client.get_instance()
+        path_params = [
+            "project",
+            _client._project_id,
+            "featurestores",
+            identifier,
+            "code",
+        ]
+        headers = {"content-type": "application/json"}
+        _client._send_request(
+            "POST", path_params, headers=headers, data=json.dumps(data)
         )

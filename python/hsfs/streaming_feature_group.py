@@ -17,6 +17,7 @@
 import humps
 import json
 
+from hsfs import util
 from hsfs.core import streaming_feature_group_engine
 
 
@@ -27,6 +28,9 @@ class StreamingFeatureGroup:
         version,
         description,
         featurestore_id,
+        method,
+        application_id=None,
+        kafka_topic_name=None,
         featurestore_name=None,
         created=None,
         creator=None,
@@ -40,13 +44,20 @@ class StreamingFeatureGroup:
         self._creator = creator
         self._version = version
         self._name = name
+        self._method = method
+        self._application_id = application_id
+        self._kafka_topic_name = kafka_topic_name
 
         self._streaming_feature_group_engine = streaming_feature_group_engine.StreamingFeatureGroupEngine(
             featurestore_id
         )
 
     def save(self, method):
-        pass
+        self._method = method
+        self._streaming_feature_group_engine.save(self)
+
+    def apply(self, stream_options={}):
+        self._streaming_feature_group_engine.apply(self, stream_options)
 
     @classmethod
     def from_response_json(cls, json_dict):
@@ -62,3 +73,11 @@ class StreamingFeatureGroup:
 
     def json(self):
         return json.dumps(self, cls=util.FeatureStoreEncoder)
+
+    @property
+    def method(self):
+        return self._method
+
+    @property
+    def kafka_topic_name(self):
+        return self._kafka_topic_name
