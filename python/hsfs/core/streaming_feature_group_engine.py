@@ -32,7 +32,7 @@ class StreamingFeatureGroupEngine:
         if "HOF_APPLY" not in os.environ:
             snapshot_data = {
                 "kernelId": os.environ["HOPSWORKS_KERNEL_ID"],
-                "applicationId": os.environ["APPLICATION_ID"],
+                "applicationId": feature_group.application_id,
             }
             self._feature_store_api.save_code(self._feature_store_id, snapshot_data)
             self._streaming_feature_group_api.save(feature_group)

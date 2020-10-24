@@ -14,6 +14,7 @@
 #   limitations under the License.
 #
 
+import os
 import warnings
 import humps
 
@@ -158,11 +159,13 @@ class FeatureStore:
         )
 
     def create_streaming_feature_group(
-        self, name, version=None, description="",
+        self, name, method, version=None, description="",
     ):
         return streaming_feature_group.StreamingFeatureGroup(
             name=name,
+            method=method,
             version=version,
             description=description,
             featurestore_id=self._id,
+            application_id=os.environ["APPLICATION_ID"],
         )

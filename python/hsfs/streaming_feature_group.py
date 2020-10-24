@@ -17,7 +17,7 @@
 import humps
 import json
 
-from hsfs import util
+from hsfs import util, kafka_topic
 from hsfs.core import streaming_feature_group_engine
 
 
@@ -29,8 +29,8 @@ class StreamingFeatureGroup:
         description,
         featurestore_id,
         method,
+        topic=None,
         application_id=None,
-        kafka_topic_name=None,
         featurestore_name=None,
         created=None,
         creator=None,
@@ -46,7 +46,7 @@ class StreamingFeatureGroup:
         self._name = name
         self._method = method
         self._application_id = application_id
-        self._kafka_topic_name = kafka_topic_name
+        self._topic = kafka_topic.KafkaTopic.from_response_json(topic)
 
         self._streaming_feature_group_engine = streaming_feature_group_engine.StreamingFeatureGroupEngine(
             featurestore_id
@@ -74,6 +74,17 @@ class StreamingFeatureGroup:
     def json(self):
         return json.dumps(self, cls=util.FeatureStoreEncoder)
 
+    def to_dict(self):
+        return {
+            "id": self._id,
+            "name": self._name,
+            "description": self._description,
+            "version": self._version,
+            "method": self._method,
+            "application_id": self._application_id,
+            "type": "streamingFeaturegroupDTO",
+        }
+
     @property
     def method(self):
         return self._method
@@ -81,3 +92,7 @@ class StreamingFeatureGroup:
     @property
     def kafka_topic_name(self):
         return self._kafka_topic_name
+
+    @property
+    def application_id(self):
+        return self._application_id
