@@ -18,7 +18,8 @@ import os
 
 import pandas as pd
 import numpy as np
-import Path
+
+from pathlib import Path
 
 # in case importing in %%local
 try:
