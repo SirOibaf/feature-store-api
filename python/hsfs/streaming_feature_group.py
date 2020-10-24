@@ -28,7 +28,6 @@ class StreamingFeatureGroup:
         version,
         description,
         featurestore_id,
-        method,
         topic=None,
         application_id=None,
         featurestore_name=None,
@@ -44,7 +43,6 @@ class StreamingFeatureGroup:
         self._creator = creator
         self._version = version
         self._name = name
-        self._method = method
         self._application_id = application_id
         self._topic = kafka_topic.KafkaTopic.from_response_json(topic)
 

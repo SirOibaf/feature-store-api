@@ -159,11 +159,10 @@ class FeatureStore:
         )
 
     def create_streaming_feature_group(
-        self, name, method, version=None, description="",
+        self, name, version=None, description="",
     ):
         return streaming_feature_group.StreamingFeatureGroup(
             name=name,
-            method=method,
             version=version,
             description=description,
             featurestore_id=self._id,
