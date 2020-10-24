@@ -44,7 +44,9 @@ class StreamingFeatureGroup:
         self._version = version
         self._name = name
         self._application_id = application_id
-        self._topic = kafka_topic.KafkaTopic.from_response_json(topic)
+
+        if topic:
+            self._topic = kafka_topic.KafkaTopic.from_response_json(topic)
 
         self._streaming_feature_group_engine = streaming_feature_group_engine.StreamingFeatureGroupEngine(
             featurestore_id
