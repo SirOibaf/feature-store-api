@@ -9,7 +9,13 @@ __version__ = imp.load_source(
 
 
 def read(fname):
-    return open(os.path.join(os.path.dirname(__file__), fname)).read()
+    if os.path.isfile(fname):
+        # In this case we are packaging for PyPi. The file is copied in the dir itself
+        # by Jenkins
+        return open(os.path.join(os.path.dirname(__file__), fname)).read()
+    else
+        # In this case we are installing from GIT, the readme is in the parent dir
+        return open(os.path.join(os.path.dirname(__file__), '..', fname)).read()
 
 
 setup(
