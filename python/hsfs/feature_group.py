@@ -377,7 +377,6 @@ class FeatureGroup(FeatureGroupBase):
         id=None,
         features=None,
         location=None,
-        jobs=None,
         online_enabled=False,
         time_travel_format=None,
         statistics_config=None,
@@ -398,7 +397,6 @@ class FeatureGroup(FeatureGroupBase):
         ]
 
         self._location = location
-        self._jobs = jobs
         self._online_enabled = online_enabled
         self._time_travel_format = (
             time_travel_format.upper() if time_travel_format is not None else None
@@ -910,7 +908,6 @@ class OnDemandFeatureGroup(FeatureGroupBase):
         creator=None,
         id=None,
         features=None,
-        jobs=None,
         statistics_config=None,
     ):
         super().__init__(featurestore_id)
@@ -926,7 +923,6 @@ class OnDemandFeatureGroup(FeatureGroupBase):
         self._data_format = data_format
         self._path = path
         self._id = id
-        self._jobs = jobs
 
         self._feature_group_engine = (
             on_demand_feature_group_engine.OnDemandFeatureGroupEngine(featurestore_id)
