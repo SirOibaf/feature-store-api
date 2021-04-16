@@ -152,7 +152,6 @@ public class Query {
    * @param wallclockEndTime   end date.
    * @return Query
    * @throws FeatureStoreException
-   * @throws IOException
    * @throws ParseException
    */
   public Query pullChanges(String wallclockStartTime, String wallclockEndTime)
