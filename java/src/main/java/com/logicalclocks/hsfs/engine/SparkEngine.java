@@ -60,6 +60,7 @@ import java.text.ParseException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.TimeoutException;
 import java.util.stream.Collectors;
 
 public class SparkEngine {
@@ -335,7 +336,7 @@ public class SparkEngine {
   public StreamingQuery writeStreamDataframe(FeatureGroup featureGroup, Dataset<Row> dataset, String queryName,
                                              String outputMode, boolean awaitTermination, Long timeout,
                                              Map<String, String> writeOptions)
-      throws FeatureStoreException, IOException, StreamingQueryException {
+      throws FeatureStoreException, IOException, StreamingQueryException, TimeoutException {
 
     if (Strings.isNullOrEmpty(queryName)) {
       queryName = "insert_stream_" + featureGroup.getOnlineTopicName() + "_" + LocalDateTime.now().format(
