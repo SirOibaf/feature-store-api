@@ -17,6 +17,7 @@
 package com.logicalclocks.hsfs;
 
 import com.google.common.base.Strings;
+import com.logicalclocks.hsfs.engine.Engine;
 import com.logicalclocks.hsfs.metadata.FeatureStoreApi;
 import com.logicalclocks.hsfs.metadata.HopsworksClient;
 import com.logicalclocks.hsfs.metadata.ProjectApi;
@@ -76,7 +77,8 @@ public class HopsworksConnection implements Closeable {
   @Builder
   public HopsworksConnection(String host, int port, String project, Region region, SecretStore secretStore,
                              boolean hostnameVerification, String trustStorePath,
-                             String certPath, String apiKeyFilePath, String apiKeyValue)
+                             String certPath, String apiKeyFilePath, String apiKeyValue,
+                             EngineType engineType)
       throws IOException, FeatureStoreException {
     this.host = host;
     this.port = port;
@@ -88,6 +90,11 @@ public class HopsworksConnection implements Closeable {
     this.certPath = certPath;
     this.apiKeyFilePath = apiKeyFilePath;
     this.apiKeyValue = apiKeyValue;
+
+    // Set the engine type in the configuration
+    if (engineType != null) {
+      Engine.engineType = engineType;
+    }
 
     HopsworksClient.setupHopsworksClient(host, port, region, secretStore,
         hostnameVerification, trustStorePath, this.apiKeyFilePath, this.apiKeyValue);

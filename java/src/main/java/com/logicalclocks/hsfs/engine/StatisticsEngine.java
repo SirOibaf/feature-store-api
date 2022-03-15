@@ -73,7 +73,7 @@ public class StatisticsEngine {
           + "possible cause might be that you inserted only data to the online storage of a feature group.");
     }
     Long commitTime = Timestamp.valueOf(LocalDateTime.now()).getTime();
-    String content = SparkEngine.getInstance().profile(dataFrame, statisticColumns, histograms, correlations,
+    String content = Engine.getInstance().profile(dataFrame, statisticColumns, histograms, correlations,
                                                        exactUniqueness);
     return new Statistics(commitTime, commitId, content, null);
   }

@@ -19,8 +19,8 @@ package com.logicalclocks.hsfs;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
-import com.logicalclocks.hsfs.engine.SparkEngine;
 import com.google.common.base.Strings;
+import com.logicalclocks.hsfs.engine.Engine;
 import com.logicalclocks.hsfs.metadata.Option;
 import com.logicalclocks.hsfs.metadata.StorageConnectorApi;
 import com.logicalclocks.hsfs.util.Constants;
@@ -76,8 +76,8 @@ public abstract class StorageConnector {
   protected StorageConnectorApi storageConnectorApi = new StorageConnectorApi();
 
   public Dataset<Row> read(String query, String dataFormat, Map<String, String> options, String path)
-      throws FeatureStoreException, IOException {
-    return SparkEngine.getInstance().read(this, dataFormat, options, path);
+      throws FeaureStoreException, IOException {
+    return Engine.getInstance().read(this, dataFormat, options, path);
   }
 
   public StorageConnector refetch() throws FeatureStoreException, IOException {
@@ -142,7 +142,7 @@ public abstract class StorageConnector {
     public Dataset<Row> read(String query, String dataFormat, Map<String, String> options, String path)
         throws FeatureStoreException, IOException {
       update();
-      return SparkEngine.getInstance().read(this, dataFormat, options, path);
+      return Engine.getInstance().read(this, dataFormat, options, path);
     }
 
     public void update() throws FeatureStoreException, IOException {
@@ -220,7 +220,7 @@ public abstract class StorageConnector {
       if (!Strings.isNullOrEmpty(query)) {
         readOptions.put("query", query);
       }
-      return SparkEngine.getInstance().read(this, Constants.JDBC_FORMAT, readOptions, null);
+      return Engine.getInstance().read(this, Constants.JDBC_FORMAT, readOptions, null);
     }
 
     @JsonIgnore
@@ -351,7 +351,7 @@ public abstract class StorageConnector {
       if (!Strings.isNullOrEmpty(query)) {
         readOptions.put("query", query);
       }
-      return SparkEngine.getInstance().read(this, Constants.SNOWFLAKE_FORMAT, readOptions, null);
+      return Ene.getInstance().read(this, Constants.SNOWFLAKE_FORMAT, readOptions, null);
     }
 
     @JsonIgnore
@@ -383,7 +383,7 @@ public abstract class StorageConnector {
       if (!Strings.isNullOrEmpty(query)) {
         readOptions.put("query", query);
       }
-      return SparkEngine.getInstance().read(this, Constants.JDBC_FORMAT, readOptions, null);
+      return Engine.getInstance().read(this, Constants.JDBC_FORMAT, readOptions, null);
     }
 
     public void update() throws FeatureStoreException, IOException {
@@ -430,11 +430,11 @@ public abstract class StorageConnector {
     private List<Option> options;
 
     public void setSslTruststoreLocation(String sslTruststoreLocation) {
-      this.sslTruststoreLocation = SparkEngine.getInstance().addFile(sslTruststoreLocation);
+      this.sslTruststoreLocation = Engine.getInstance().addFile(sslTruststoreLocation);
     }
 
     public void setSslKeystoreLocation(String sslKeystoreLocation) {
-      this.sslKeystoreLocation = SparkEngine.getInstance().addFile(sslKeystoreLocation);
+      this.sslKeystoreLocation = Engine.getInstance().addFile(sslKeystoreLocation);
     }
 
     public Map<String, String> sparkOptions() {
@@ -495,7 +495,7 @@ public abstract class StorageConnector {
         options.put("subscribe", topic);
       }
 
-      return SparkEngine.getInstance().readStream(this, sparkFormat, messageFormat.toLowerCase(), schema, options,
+      return Engine.getInstance().readStream(this, sparkFormat, messageFormat.toLowerCase(), schema, options,
         includeMetadata);
     }
   }

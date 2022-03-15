@@ -92,13 +92,13 @@ public class FeatureGroupBaseEngine {
   public <T extends FeatureGroupBase> void appendFeatures(FeatureGroupBase featureGroup, List<Feature> features,
                                                           Class<T> fgClass)
       throws FeatureStoreException, IOException, ParseException {
-    Dataset<Row> emptyDataframe = SparkEngine.getInstance().getEmptyAppendedDataframe(featureGroup.read(), features);
+    Dataset<Row> emptyDataframe = Engine.getInstance().getEmptyAppendedDataframe(featureGroup.read(), features);
     featureGroup.getFeatures().addAll(features);
     T apiFG = featureGroupApi.updateMetadata(featureGroup, "updateMetadata",
         fgClass);
     featureGroup.setFeatures(apiFG.getFeatures());
     if (featureGroup instanceof FeatureGroup) {
-      SparkEngine.getInstance().writeOfflineDataframe((FeatureGroup) featureGroup, emptyDataframe,
+      Engine.getInstance().writeOfflineDataframe((FeatureGroup) featureGroup, emptyDataframe,
           HudiOperationType.UPSERT, new HashMap<>(), null);
     }
   }

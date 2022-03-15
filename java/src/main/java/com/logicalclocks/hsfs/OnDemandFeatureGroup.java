@@ -16,6 +16,7 @@
 
 package com.logicalclocks.hsfs;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.logicalclocks.hsfs.engine.OnDemandFeatureGroupEngine;
 import com.logicalclocks.hsfs.engine.CodeEngine;
@@ -34,6 +35,7 @@ import scala.collection.JavaConverters;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -124,5 +126,15 @@ public class OnDemandFeatureGroup extends FeatureGroupBase {
 
   public void show(int numRows) throws FeatureStoreException, IOException {
     read().show(numRows);
+  }
+
+  @JsonIgnore
+  public Map<String, String> getOptionMap() {
+    if (options == null) {
+      return new HashMap<>();
+    }
+
+    return options.stream()
+        .collect(Collectors.toMap(OnDemandOptions::getName, OnDemandOptions::getValue));
   }
 }

@@ -115,9 +115,9 @@ public class TrainingDatasetEngine {
 
     // Build write options map
     Map<String, String> writeOptions =
-        SparkEngine.getInstance().getWriteOptions(userWriteOptions, trainingDataset.getDataFormat());
+        Engine.getInstance().getWriteOptions(userWriteOptions, trainingDataset.getDataFormat());
 
-    SparkEngine.getInstance().write(trainingDataset, dataset, writeOptions, SaveMode.Overwrite);
+    Engine.getInstance().write(trainingDataset, dataset, writeOptions, SaveMode.Overwrite);
 
     return trainingDataset;
   }
@@ -144,15 +144,15 @@ public class TrainingDatasetEngine {
     }
 
     Map<String, String> writeOptions =
-        SparkEngine.getInstance().getWriteOptions(providedOptions, trainingDataset.getDataFormat());
+        Engine.getInstance().getWriteOptions(providedOptions, trainingDataset.getDataFormat());
 
-    SparkEngine.getInstance().write(trainingDataset, dataset, writeOptions, saveMode);
+    Engine.getInstance().write(trainingDataset, dataset, writeOptions, saveMode);
   }
 
   public Dataset<Row> read(TrainingDataset trainingDataset, String split, Map<String, String> providedOptions)
       throws FeatureStoreException, IOException {
     Map<String, String> readOptions =
-        SparkEngine.getInstance().getReadOptions(providedOptions, trainingDataset.getDataFormat());
+        Engine.getInstance().getReadOptions(providedOptions, trainingDataset.getDataFormat());
 
     String path = null;
     if (!com.google.common.base.Strings.isNullOrEmpty(split)) {

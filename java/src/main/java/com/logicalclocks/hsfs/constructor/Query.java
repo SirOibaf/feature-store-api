@@ -22,7 +22,7 @@ import com.logicalclocks.hsfs.FeatureStoreException;
 import com.logicalclocks.hsfs.OnDemandFeatureGroup;
 import com.logicalclocks.hsfs.Storage;
 import com.logicalclocks.hsfs.StorageConnector;
-import com.logicalclocks.hsfs.engine.SparkEngine;
+import com.logicalclocks.hsfs.engine.Engine;
 import com.logicalclocks.hsfs.engine.Utils;
 import com.logicalclocks.hsfs.metadata.FeatureGroupBase;
 import com.logicalclocks.hsfs.metadata.QueryConstructorApi;
@@ -230,7 +230,7 @@ public class Query {
       registerHudiFeatureGroups(fsQuery.getHudiCachedFeatureGroups(), readOptions);
 
       LOGGER.info("Executing query: " + fsQuery.getStorageQuery(Storage.OFFLINE));
-      return SparkEngine.getInstance().sql(fsQuery.getStorageQuery(Storage.OFFLINE));
+      return Engine.getInstance().sql(fsQuery.getStorageQuery(Storage.OFFLINE));
     }
   }
 
@@ -266,7 +266,7 @@ public class Query {
       String alias = onDemandFeatureGroupAlias.getAlias();
       OnDemandFeatureGroup onDemandFeatureGroup = onDemandFeatureGroupAlias.getOnDemandFeatureGroup();
 
-      SparkEngine.getInstance().registerOnDemandTemporaryTable(onDemandFeatureGroup, alias);
+      Engine.getInstance().registerOnDemandTemporaryTable(onDemandFeatureGroup, alias);
     }
   }
 
@@ -276,7 +276,7 @@ public class Query {
       String alias = hudiFeatureGroupAlias.getAlias();
       FeatureGroup featureGroup = hudiFeatureGroupAlias.getFeatureGroup();
 
-      SparkEngine.getInstance().registerHudiTemporaryTable(featureGroup, alias,
+      Engine.getInstance().registerHudiTemporaryTable(featureGroup, alias,
           hudiFeatureGroupAlias.getLeftFeatureGroupStartTimestamp(),
           hudiFeatureGroupAlias.getLeftFeatureGroupEndTimestamp(),
           readOptions);

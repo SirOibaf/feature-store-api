@@ -73,16 +73,7 @@ import java.util.Map;
 import java.util.concurrent.TimeoutException;
 import java.util.stream.Collectors;
 
-public class SparkEngine {
-
-  private static SparkEngine INSTANCE = null;
-
-  public static synchronized SparkEngine getInstance() {
-    if (INSTANCE == null) {
-      INSTANCE = new SparkEngine();
-    }
-    return INSTANCE;
-  }
+public class SparkEngine implements IEngine {
 
   @Getter
   private SparkSession sparkSession;
@@ -90,7 +81,7 @@ public class SparkEngine {
   private Utils utils = new Utils();
   private HudiEngine hudiEngine = new HudiEngine();
 
-  private SparkEngine() {
+  public SparkEngine() {
     sparkSession = SparkSession.builder()
         .enableHiveSupport()
         .getOrCreate();
@@ -102,7 +93,7 @@ public class SparkEngine {
     sparkSession.conf().set("spark.sql.hive.convertMetastoreParquet", "false");
   }
 
-  public void validateSparkConfiguration() throws FeatureStoreException {
+  public void validateEnvironment() throws FeatureStoreException {
     String exceptionText = "Spark is misconfigured for communication with Hopsworks, missing or invalid property: ";
 
     Map<String, String> configurationMap = new HashMap<>();
@@ -128,15 +119,15 @@ public class SparkEngine {
     }
   }
 
-  public String getTrustStorePath() {
+  private String getTrustStorePath() {
     return sparkSession.conf().get("spark.hadoop.hops.ssl.trustore.name");
   }
 
-  public String getKeyStorePath() {
+  private String getKeyStorePath() {
     return sparkSession.conf().get("spark.hadoop.hops.ssl.keystore.name");
   }
 
-  public String getCertKey() {
+  private String getCertKey() {
     return sparkSession.conf().get("spark.hadoop.hops.ssl.keystores.passwd.name");
   }
 
@@ -144,11 +135,12 @@ public class SparkEngine {
     return sparkSession.sql(query);
   }
 
+  @Override
   public Dataset<Row> registerOnDemandTemporaryTable(OnDemandFeatureGroup onDemandFeatureGroup, String alias)
       throws FeatureStoreException, IOException {
     Dataset<Row> dataset = onDemandFeatureGroup.getStorageConnector().read(onDemandFeatureGroup.getQuery(),
         onDemandFeatureGroup.getDataFormat() != null ? onDemandFeatureGroup.getDataFormat().toString() : null,
-        getOnDemandOptions(onDemandFeatureGroup),
+        onDemandFeatureGroup.getOptionMap(),
         onDemandFeatureGroup.getStorageConnector().getPath(onDemandFeatureGroup.getPath()));
     if (!Strings.isNullOrEmpty(onDemandFeatureGroup.getLocation())) {
       sparkSession.sparkContext().textFile(onDemandFeatureGroup.getLocation(), 0).collect();
@@ -158,15 +150,7 @@ public class SparkEngine {
     return dataset;
   }
 
-  private Map<String, String> getOnDemandOptions(OnDemandFeatureGroup onDemandFeatureGroup) {
-    if (onDemandFeatureGroup.getOptions() == null) {
-      return new HashMap<>();
-    }
-
-    return onDemandFeatureGroup.getOptions().stream()
-        .collect(Collectors.toMap(OnDemandOptions::getName, OnDemandOptions::getValue));
-  }
-
+  @Override
   public void registerHudiTemporaryTable(FeatureGroup featureGroup, String alias, Long leftFeaturegroupStartTimestamp,
                                          Long leftFeaturegroupEndTimestamp, Map<String, String> readOptions) {
     hudiEngine.registerTemporaryTable(sparkSession, featureGroup, alias,
@@ -243,32 +227,6 @@ public class SparkEngine {
     return writeOptions;
   }
 
-  public Map<String, String> getReadOptions(Map<String, String> providedOptions, DataFormat dataFormat) {
-    Map<String, String> readOptions = new HashMap<>();
-    switch (dataFormat) {
-      case CSV:
-        readOptions.put(Constants.HEADER, "true");
-        readOptions.put(Constants.DELIMITER, ",");
-        readOptions.put(Constants.INFER_SCHEMA, "true");
-        break;
-      case TSV:
-        readOptions.put(Constants.HEADER, "true");
-        readOptions.put(Constants.DELIMITER, "\t");
-        readOptions.put(Constants.INFER_SCHEMA, "true");
-        break;
-      case TFRECORDS:
-      case TFRECORD:
-        readOptions.put(Constants.TF_CONNECTOR_RECORD_TYPE, "Example");
-        break;
-      default:
-        break;
-    }
-    if (providedOptions != null && !providedOptions.isEmpty()) {
-      readOptions.putAll(providedOptions);
-    }
-    return readOptions;
-  }
-
   /**
    * Write multiple training dataset splits and name them.
    *
@@ -304,33 +262,6 @@ public class SparkEngine {
         .options(writeOptions)
         .mode(saveMode)
         .save(SparkEngine.sparkPath(path));
-  }
-
-  // Here dataFormat is string as this method is used both with OnDemand Feature Groups as well as with
-  // Training Dataset. They use 2 different enumerators for dataFormat, as for instance, we don't allow
-  // OnDemand Feature Group in TFRecords format. However Spark does not use an enum but a string.
-  public Dataset<Row> read(StorageConnector storageConnector, String dataFormat,
-                           Map<String, String> readOptions, String location) throws FeatureStoreException, IOException {
-    setupConnectorHadoopConf(storageConnector);
-
-    String path = "";
-    if (location != null) {
-      path = new Path(location, "**").toString();
-    } else {
-      // path is null for jdbc kind of on demand fgs
-      path = null;
-    }
-    path = SparkEngine.sparkPath(path);
-
-    DataFrameReader reader = SparkEngine.getInstance().getSparkSession()
-        .read()
-        .format(dataFormat)
-        .options(readOptions);
-
-    if (!Strings.isNullOrEmpty(path)) {
-      return reader.load(SparkEngine.sparkPath(path));
-    }
-    return reader.load();
   }
 
   /**
@@ -376,6 +307,60 @@ public class SparkEngine {
       query.awaitTermination(timeout);
     }
     return query;
+  }
+
+
+  // Here dataFormat is string as this method is used both with OnDemand Feature Groups as well as with
+  // Training Dataset. They use 2 different enumerators for dataFormat, as for instance, we don't allow
+  // OnDemand Feature Group in TFRecords format. However Spark does not use an enum but a string.
+  public Dataset<Row> read(StorageConnector storageConnector, String dataFormat,
+                           Map<String, String> readOptions, String location) throws FeatureStoreException, IOException {
+    setupConnectorHadoopConf(storageConnector);
+
+    String path = "";
+    if (location != null) {
+      path = new Path(location, "**").toString();
+    } else {
+      // path is null for jdbc kind of on demand fgs
+      path = null;
+    }
+    path = SparkEngine.sparkPath(path);
+
+    DataFrameReader reader = sparkSession
+        .read()
+        .format(dataFormat)
+        .options(readOptions);
+
+    if (!Strings.isNullOrEmpty(path)) {
+      return reader.load(SparkEngine.sparkPath(path));
+    }
+    return reader.load();
+  }
+
+  public Map<String, String> getReadOptions(Map<String, String> providedOptions, DataFormat dataFormat) {
+    Map<String, String> readOptions = new HashMap<>();
+    switch (dataFormat) {
+      case CSV:
+        readOptions.put(Constants.HEADER, "true");
+        readOptions.put(Constants.DELIMITER, ",");
+        readOptions.put(Constants.INFER_SCHEMA, "true");
+        break;
+      case TSV:
+        readOptions.put(Constants.HEADER, "true");
+        readOptions.put(Constants.DELIMITER, "\t");
+        readOptions.put(Constants.INFER_SCHEMA, "true");
+        break;
+      case TFRECORDS:
+      case TFRECORD:
+        readOptions.put(Constants.TF_CONNECTOR_RECORD_TYPE, "Example");
+        break;
+      default:
+        break;
+    }
+    if (providedOptions != null && !providedOptions.isEmpty()) {
+      readOptions.putAll(providedOptions);
+    }
+    return readOptions;
   }
 
   /**

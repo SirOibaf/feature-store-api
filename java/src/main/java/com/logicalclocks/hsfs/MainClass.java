@@ -16,7 +16,7 @@
 
 package com.logicalclocks.hsfs;
 
-import com.logicalclocks.hsfs.engine.SparkEngine;
+import com.logicalclocks.hsfs.engine.Engine;
 import com.logicalclocks.hsfs.constructor.Query;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -68,6 +68,6 @@ public class MainClass {
 
     td.save(query);
 
-    SparkEngine.getInstance().getSparkSession().close();
+    Engine.getInstance().getSparkSession().close();
   }
 }

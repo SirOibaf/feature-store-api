@@ -174,7 +174,7 @@ public class FeatureGroupEngine {
           + "`, with version `" + featureGroup.getVersion() + "` will not perform validation.");
     }
 
-    return SparkEngine.getInstance().writeStreamDataframe(featureGroup, utils.sanitizeFeatureNames(featureData),
+    return Engine.getInstance().writeStreamDataframe(featureGroup, utils.sanitizeFeatureNames(featureData),
         queryName, outputMode, awaitTermination, timeout, getKafkaConfig(featureGroup, writeOptions));
   }
 
@@ -186,14 +186,14 @@ public class FeatureGroupEngine {
       throw new FeatureStoreException("Online storage is not enabled for this feature group. Set `online=false` to "
           + "write to the offline storage.");
     } else if (storage == Storage.OFFLINE || !featureGroup.getOnlineEnabled()) {
-      SparkEngine.getInstance().writeOfflineDataframe(featureGroup, dataset, operation,
+      Engine.getInstance().writeOfflineDataframe(featureGroup, dataset, operation,
           offlineWriteOptions, validationId);
     } else if (storage == Storage.ONLINE) {
-      SparkEngine.getInstance().writeOnlineDataframe(featureGroup, dataset, onlineWriteOptions);
+      Engine.getInstance().writeOnlineDataframe(featureGroup, dataset, onlineWriteOptions);
     } else if (featureGroup.getOnlineEnabled() && storage == null) {
-      SparkEngine.getInstance().writeOfflineDataframe(featureGroup, dataset, operation,
+      Engine.getInstance().writeOfflineDataframe(featureGroup, dataset, operation,
           offlineWriteOptions, validationId);
-      SparkEngine.getInstance().writeOnlineDataframe(featureGroup, dataset, onlineWriteOptions);
+      Engine.getInstance().writeOnlineDataframe(featureGroup, dataset, onlineWriteOptions);
     } else {
       throw new FeatureStoreException("Error writing to offline and online feature store.");
     }
@@ -250,7 +250,7 @@ public class FeatureGroupEngine {
           + "time travel enabled feature group");
     }
 
-    return hudiEngine.deleteRecord(SparkEngine.getInstance().getSparkSession(), featureGroup, dataset, writeOptions);
+    return hudiEngine.deleteRecord(Engine.getInstance().getSparkSession(), featureGroup, dataset, writeOptions);
   }
 
   public String getAvroSchema(FeatureGroup featureGroup) throws FeatureStoreException, IOException {

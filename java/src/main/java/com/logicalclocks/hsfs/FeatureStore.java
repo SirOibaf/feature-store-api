@@ -17,7 +17,7 @@
 package com.logicalclocks.hsfs;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.logicalclocks.hsfs.engine.SparkEngine;
+import com.logicalclocks.hsfs.engine.Engine;
 import com.logicalclocks.hsfs.metadata.Expectation;
 import com.logicalclocks.hsfs.metadata.ExpectationsApi;
 import com.logicalclocks.hsfs.metadata.FeatureGroupApi;
@@ -153,7 +153,7 @@ public class FeatureStore {
   }
 
   public Dataset<Row> sql(String query) {
-    return SparkEngine.getInstance().sql(query);
+    return Engine.getInstance().sql(query);
   }
 
   public StorageConnector getStorageConnector(String name) throws FeatureStoreException, IOException {

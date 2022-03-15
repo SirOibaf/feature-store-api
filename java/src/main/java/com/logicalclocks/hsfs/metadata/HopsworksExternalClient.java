@@ -20,7 +20,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Strings;
 import com.logicalclocks.hsfs.FeatureStoreException;
 import com.logicalclocks.hsfs.SecretStore;
-import com.logicalclocks.hsfs.engine.SparkEngine;
+import com.logicalclocks.hsfs.engine.Engine;
 import lombok.Getter;
 import org.apache.commons.io.FileUtils;
 import org.apache.http.HttpHeaders;
@@ -65,11 +65,6 @@ public class HopsworksExternalClient implements HopsworksHttpClient {
   private static final Logger LOGGER = LoggerFactory.getLogger(HopsworksExternalClient.class.getName());
   private static final String PARAM_NAME_SECRET_STORE = "hopsworks/role/";
   private static final String PARAM_NAME_PARAMETER_STORE = "/hopsworks/role/";
-
-
-  private static final String MATERIAL_PASSWD = "material_passwd";
-  private static final String T_CERTIFICATE = "t_certificate";
-  private static final String K_CERTIFICATE = "k_certificate";
 
   private PoolingHttpClientConnectionManager connectionPool = null;
 
@@ -138,10 +133,7 @@ public class HopsworksExternalClient implements HopsworksHttpClient {
       this.apiKey = readApiKey(secretStore, region, apiKeyFilepath);
     }
 
-    SparkEngine.getInstance().validateSparkConfiguration();
-    this.trustStorePath = SparkEngine.getInstance().getTrustStorePath();
-    this.keyStorePath = SparkEngine.getInstance().getKeyStorePath();
-    this.certKey = HopsworksHttpClient.readCertKey(SparkEngine.getInstance().getCertKey());
+    Engine.getInstance().validateEnvironment();
   }
 
   private Registry<ConnectionSocketFactory> createConnectionFactory(HttpHost httpHost, boolean hostnameVerification,
