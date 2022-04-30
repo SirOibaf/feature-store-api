@@ -666,7 +666,10 @@ class TrainingDataset:
         self._training_dataset_engine.init_prepared_statement(self, batch, external)
 
     def get_serving_vector(
-        self, entry: Dict[str, Any], external: Optional[bool] = False
+        self,
+        entry: Dict[str, Any],
+        passthrough: Dict[str, Any] = {},
+        external: Optional[bool] = False,
     ):
         """Returns assembled serving vector from online feature store.
 
@@ -682,7 +685,9 @@ class TrainingDataset:
             `list` List of feature values related to provided primary keys, ordered according to positions of this
             features in training dataset query.
         """
-        return self._training_dataset_engine.get_serving_vector(self, entry, external)
+        return self._training_dataset_engine.get_serving_vector(
+            self, entry, passthrough, external
+        )
 
     def get_serving_vectors(
         self, entry: Dict[str, List[Any]], external: Optional[bool] = False

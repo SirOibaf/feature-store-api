@@ -169,7 +169,7 @@ class TrainingDatasetEngine:
             row_dict[feature_name] = schema.read(decoder)
         return row_dict
 
-    def get_serving_vector(self, training_dataset, entry, external):
+    def get_serving_vector(self, training_dataset, entry, passthrough_dict, external):
         """Assembles serving vector from online feature store."""
 
         if all([isinstance(val, list) for val in entry.values()]):
@@ -211,6 +211,10 @@ class TrainingDatasetEngine:
                         "No data was retrieved from online feature store using input "
                         + entry
                     )
+
+                # Replace online feature store features with passthrough features
+                result_dict = self._apply_passthrough(result_dict, passthrough_dict)
+
                 # apply transformation functions
                 result_dict = self._apply_transformation(
                     training_dataset.transformation_functions, result_dict
@@ -397,6 +401,13 @@ class TrainingDatasetEngine:
                 transformation_fn = transformation_fns[feature_name].transformation_fn
                 row_dict[feature_name] = transformation_fn(row_dict[feature_name])
         return row_dict
+
+    @staticmethod
+    def _apply_passthrough(result_dict, passthrough_dict):
+        for feature_name in passthrough_dict:
+            result_dict[feature_name] = passthrough_dict[feature_name]
+
+        return result_dict
 
     @staticmethod
     def _parametrize_query(name, query_online):
