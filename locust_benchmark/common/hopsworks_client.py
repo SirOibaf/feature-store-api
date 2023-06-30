@@ -1,9 +1,5 @@
-import datetime
-import random
-import string
 import json
 
-import numpy as np
 import pandas as pd
 
 from locust.runners import MasterRunner, LocalRunner
@@ -40,10 +36,18 @@ class HopsworksClient:
         self.batch_size = self.hopsworks_config.get("batch_size", 100)
 
     def get_or_create_fg(self):
+        from hsfs.feature import Feature
+
+        features = [
+            Feature(name="ip", type="bigint", online_type="bigint"),
+            Feature(name="emb", type="array<double>", online_type="blob"),
+        ]
+
         locust_fg = self.fs.get_or_create_feature_group(
             name="locust_fg",
             version=1,
             primary_key=["ip"],
+            features=features,
             online_enabled=True,
             stream=True,
         )
@@ -73,27 +77,6 @@ class HopsworksClient:
             self.connection.close()
 
     def generate_insert_df(self, rows, schema_repetitions):
-        data = {"ip": range(0, rows)}
-        df = pd.DataFrame.from_dict(data)
-
-        for i in range(0, schema_repetitions):
-            df["rand_ts_1_" + str(i)] = datetime.datetime.now()
-            df["rand_ts_2_" + str(i)] = datetime.datetime.now()
-            df["rand_int_1" + str(i)] = np.random.randint(0, 100000)
-            df["rand_int_2" + str(i)] = np.random.randint(0, 100000)
-            df["rand_float_1" + str(i)] = np.random.uniform(low=0.0, high=1.0)
-            df["rand_float_2" + str(i)] = np.random.uniform(low=0.0, high=1.0)
-            df["rand_string_1" + str(i)] = "".join(
-                random.choices(string.ascii_lowercase, k=5)
-            )
-            df["rand_string_2" + str(i)] = "".join(
-                random.choices(string.ascii_lowercase, k=5)
-            )
-            df["rand_string_3" + str(i)] = "".join(
-                random.choices(string.ascii_lowercase, k=5)
-            )
-            df["rand_string_4" + str(i)] = "".join(
-                random.choices(string.ascii_lowercase, k=5)
-            )
-
-        return df
+        emb = [0.431471023471423423420328461254] * 5000
+        data = {"ip": range(0, rows), "emb": [emb] * rows}
+        return pd.DataFrame.from_dict(data)
