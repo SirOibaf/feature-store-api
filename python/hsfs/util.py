@@ -112,6 +112,7 @@ def create_mysql_engine(online_conn, external, options=None):
         options = {"pool_recycle": 3600}
     elif "pool_recycle" not in options:
         options["pool_recycle"] = 3600
+    options["pool_size"] = 20
     # default connection pool size kept by engine is 5
     sql_alchemy_engine = create_engine(sql_alchemy_conn_str, **options)
     return sql_alchemy_engine

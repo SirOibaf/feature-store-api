@@ -30,6 +30,8 @@ from hsfs.core import (
     feature_view_engine,
 )
 
+from threading import Thread
+
 
 class VectorServer:
     def __init__(self, feature_store_id, features=[], training_dataset_version=None):
@@ -208,6 +210,45 @@ class VectorServer:
                 "Unknown return type. Supported return types are 'list', 'pandas' and 'numpy'"
             )
 
+    def execute_mysql_request(
+        self,
+        prepared_statement,
+        prepared_statement_index,
+        entry,
+        entry_values_tuples,
+        index,
+        results,
+    ):
+        with self._prepared_statement_engine.connect() as mysql_conn:
+            result_proxy = mysql_conn.execute(
+                prepared_statement,
+                {"batch_ids": entry_values_tuples},
+            ).fetchall()
+
+            statement_results = []
+            for row in result_proxy:
+                result_dict = self.deserialize_complex_features(
+                    self._complex_features, row._asdict()
+                )
+
+                if not result_dict:
+                    raise Exception(
+                        "No data was retrieved from online feature store using input "
+                        + entry
+                    )
+
+                statement_results.append(result_dict)
+
+            # sort the results based on the order of keys provided by the user
+            sorted_results = self._get_sorted_results(
+                self._pkname_by_serving_index[prepared_statement_index],
+                entry,
+                statement_results,
+                self._prefix_by_serving_index[prepared_statement_index],
+            )
+
+            results[index] = sorted_results
+
     def get_feature_vectors(self, entry, return_type, passed_features=[]):
         """Assembles serving vector from online feature store."""
 
@@ -215,57 +256,60 @@ class VectorServer:
         # vector itself to stitch them correctly if there are multiple feature groups involved. At this point we
         # expect that backend will return correctly ordered vectors.
         batch_results = {}
-        with self._prepared_statement_engine.connect() as mysql_conn:
-            for prepared_statement_index in self._prepared_statements:
-                prepared_statement = self._prepared_statements[prepared_statement_index]
+        for prepared_statement_index in self._prepared_statements:
+            prepared_statement = self._prepared_statements[prepared_statement_index]
 
-                entry_values_tuples = list(
-                    map(
-                        lambda e: tuple(
-                            [
-                                e.get(key)
-                                for key in self._pkname_by_serving_index[
-                                    prepared_statement_index
-                                ]
+            entry_values_tuples = list(
+                map(
+                    lambda e: tuple(
+                        [
+                            e.get(key)
+                            for key in self._pkname_by_serving_index[
+                                prepared_statement_index
                             ]
-                        ),
-                        entry,
-                    )
-                )
-
-                result_proxy = mysql_conn.execute(
-                    prepared_statement,
-                    {"batch_ids": entry_values_tuples},
-                ).fetchall()
-
-                statement_results = []
-                for row in result_proxy:
-                    result_dict = self.deserialize_complex_features(
-                        self._complex_features, row._asdict()
-                    )
-
-                    if not result_dict:
-                        raise Exception(
-                            "No data was retrieved from online feature store using input "
-                            + entry
-                        )
-
-                    statement_results.append(result_dict)
-
-                # sort the results based on the order of keys provided by the user
-                sorted_results = self._get_sorted_results(
-                    self._pkname_by_serving_index[prepared_statement_index],
+                        ]
+                    ),
                     entry,
-                    statement_results,
-                    self._prefix_by_serving_index[prepared_statement_index],
                 )
+            )
 
-                # add partial results to the global results
-                for vector_index, results_dict in enumerate(sorted_results):
-                    if vector_index not in batch_results:
-                        batch_results[vector_index] = results_dict
-                    else:
-                        batch_results[vector_index].update(results_dict)
+            threads = [None] * 10
+            results = [None] * 10
+
+            for i in range(len(threads)):
+                # prepared_statemnt, prepared_statement_index, entry, entry_values_tuples, index, results
+                list_index_start = 16 * i
+                list_index_end = 16 * (i + 1)
+                print(list_index_start)
+                print(list_index_end)
+                threads[i] = Thread(
+                    target=self.execute_mysql_request,
+                    args=(
+                        prepared_statement,
+                        prepared_statement_index,
+                        entry[list_index_start:list_index_end],
+                        entry_values_tuples[list_index_start:list_index_end],
+                        i,
+                        results,
+                    ),
+                )
+                threads[i].start()
+
+            for i in range(len(threads)):
+                threads[i].join()
+
+            sorted_results = []
+            for i in range(len(results)):
+                sorted_results = sorted_results + results[i]
+
+            print(len(sorted_results))
+
+            # add partial results to the global results
+            for vector_index, results_dict in enumerate(sorted_results):
+                if vector_index not in batch_results:
+                    batch_results[vector_index] = results_dict
+                else:
+                    batch_results[vector_index].update(results_dict)
 
         # apply passed features to each batch result
         for vector_index, pf in enumerate(passed_features):
